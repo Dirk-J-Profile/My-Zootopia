@@ -3,6 +3,8 @@
 import tempfile
 import unittest
 from pathlib import Path
+from subprocess import run
+import sys
 
 from animals_web_generator import generate_html, load_data, serialize_animal
 
@@ -50,6 +52,19 @@ class ZootopiaGeneratorTests(unittest.TestCase):
         self.assertEqual(19, generated_html.count('<li class="cards__item">'))
         self.assertIn("My Animal Repository", generated_html)
         self.assertIn("Wire Fox Terrier", generated_html)
+
+    def test_pycharm_entry_point_runs_the_generator(self):
+        """Running main.py creates the page and reports all 19 cards."""
+        result = run(
+            [sys.executable, "main.py"],
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=PROJECT_DIR,
+        )
+        expected_message = "Generated animals.html with 19 animal cards."
+        self.assertIn(expected_message, result.stdout)
+        self.assertTrue((PROJECT_DIR / "animals.html").is_file())
 
 
 if __name__ == "__main__":

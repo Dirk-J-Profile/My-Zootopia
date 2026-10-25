@@ -38,12 +38,16 @@ class ZootopiaGeneratorTests(unittest.TestCase):
         card = serialize_animal(animal)
         self.assertIn('<li class="cards__item">', card)
         self.assertIn('<div class="card__title">Wire Fox Terrier</div>', card)
-        self.assertIn("<strong>Diet:</strong> Carnivore<br/>", card)
+        self.assertIn('<div class="card__text">', card)
+        self.assertIn("<ul>", card)
+        self.assertIn("<li><strong>Diet:</strong> Carnivore</li>", card)
         self.assertIn(
-            "<strong>Location:</strong> North-America and Canada<br/>", card
+            "<li><strong>Location:</strong> North-America and Canada</li>",
+            card,
         )
-        self.assertIn("<strong>Type:</strong> mammal<br/>", card)
-        self.assertIn("<strong>Skin Type:</strong> Fur<br/>", card)
+        self.assertIn("<li><strong>Type:</strong> mammal</li>", card)
+        self.assertIn("<li><strong>Skin Type:</strong> Fur</li>", card)
+        self.assertNotIn("<br/>", card)
         self.assertNotIn("Reptilia", card)
         self.assertTrue(card.rstrip().endswith("</li>"))
 
@@ -58,7 +62,7 @@ class ZootopiaGeneratorTests(unittest.TestCase):
 
         card = serialize_animal(animal)
 
-        self.assertIn("<strong>Location:</strong> Europe<br/>", card)
+        self.assertIn("<li><strong>Location:</strong> Europe</li>", card)
         self.assertNotIn("<strong>Type:</strong>", card)
 
     def test_generate_html_replaces_template_marker_with_all_cards(self):

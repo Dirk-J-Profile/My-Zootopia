@@ -29,24 +29,30 @@ def serialize_animal(animal: dict[str, Any]) -> str:
     type_line = ""
     if animal_type:
         escaped_type = escape(str(animal_type))
-        type_line = f'            <strong>Type:</strong> {escaped_type}<br/>\n'
+        type_line = (
+            "            <li><strong>Type:</strong> "
+            f"{escaped_type}</li>\n"
+        )
     skin_type_line = ""
     if skin_type:
         escaped_skin_type = escape(str(skin_type))
         skin_type_line = (
-            "            <strong>Skin Type:</strong> "
-            f"{escaped_skin_type}<br/>\n"
+            "            <li><strong>Skin Type:</strong> "
+            f"{escaped_skin_type}</li>\n"
         )
 
     return (
         '    <li class="cards__item">\n'
         f'        <div class="card__title">{name}</div>\n'
-        '        <p class="card__text">\n'
-        f'            <strong>Diet:</strong> {diet}<br/>\n'
-        f'            <strong>Location:</strong> {escape(locations)}<br/>\n'
+        '        <div class="card__text">\n'
+        '            <ul>\n'
+        f'            <li><strong>Diet:</strong> {diet}</li>\n'
+        "            <li><strong>Location:</strong> "
+        f"{escape(locations)}</li>\n"
         f'{type_line}'
         f'{skin_type_line}'
-        '        </p>\n'
+        '            </ul>\n'
+        '        </div>\n'
         '    </li>'
     )
 

@@ -27,9 +27,9 @@ class ZootopiaGeneratorTests(unittest.TestCase):
         """One data record becomes the guide's required HTML card structure."""
         animal = {
             "name": "Wire Fox Terrier",
-            "characteristics": {"diet": "Carnivore"},
+            "characteristics": {"diet": "Carnivore", "type": "mammal"},
             "locations": ["North-America", "Canada"],
-            "taxonomy": {"class": "Mammalia"},
+            "taxonomy": {"class": "Reptilia"},
         }
         card = serialize_animal(animal)
         self.assertIn('<li class="cards__item">', card)
@@ -38,8 +38,23 @@ class ZootopiaGeneratorTests(unittest.TestCase):
         self.assertIn(
             "<strong>Location:</strong> North-America and Canada<br/>", card
         )
-        self.assertIn("<strong>Type:</strong> Mammalia<br/>", card)
+        self.assertIn("<strong>Type:</strong> mammal<br/>", card)
+        self.assertNotIn("Reptilia", card)
         self.assertTrue(card.rstrip().endswith("</li>"))
+
+    def test_serialize_animal_omits_missing_optional_type(self):
+        """Records without characteristics.type remain serializable."""
+        animal = {
+            "name": "English Foxhound",
+            "characteristics": {"diet": "Omnivore"},
+            "locations": ["Europe"],
+            "taxonomy": {"class": "Mammalia"},
+        }
+
+        card = serialize_animal(animal)
+
+        self.assertIn("<strong>Location:</strong> Europe<br/>", card)
+        self.assertNotIn("<strong>Type:</strong>", card)
 
     def test_generate_html_replaces_template_marker_with_all_cards(self):
         """The page has 19 cards and no unreplaced template marker."""

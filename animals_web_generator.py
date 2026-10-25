@@ -24,7 +24,11 @@ def serialize_animal(animal: dict[str, Any]) -> str:
     name = escape(str(animal["name"]))
     diet = escape(str(animal["characteristics"]["diet"]))
     locations = " and ".join(map(str, animal["locations"]))
-    animal_class = escape(str(animal["taxonomy"]["class"]))
+    animal_type = animal["characteristics"].get("type")
+    type_line = ""
+    if animal_type:
+        escaped_type = escape(str(animal_type))
+        type_line = f'            <strong>Type:</strong> {escaped_type}<br/>\n'
 
     return (
         '    <li class="cards__item">\n'
@@ -32,7 +36,7 @@ def serialize_animal(animal: dict[str, Any]) -> str:
         '        <p class="card__text">\n'
         f'            <strong>Diet:</strong> {diet}<br/>\n'
         f'            <strong>Location:</strong> {escape(locations)}<br/>\n'
-        f'            <strong>Type:</strong> {animal_class}<br/>\n'
+        f'{type_line}'
         '        </p>\n'
         '    </li>'
     )

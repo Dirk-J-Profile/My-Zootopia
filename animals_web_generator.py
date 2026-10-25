@@ -25,10 +25,18 @@ def serialize_animal(animal: dict[str, Any]) -> str:
     diet = escape(str(animal["characteristics"]["diet"]))
     locations = " and ".join(map(str, animal["locations"]))
     animal_type = animal["characteristics"].get("type")
+    skin_type = animal["characteristics"].get("skin_type")
     type_line = ""
     if animal_type:
         escaped_type = escape(str(animal_type))
         type_line = f'            <strong>Type:</strong> {escaped_type}<br/>\n'
+    skin_type_line = ""
+    if skin_type:
+        escaped_skin_type = escape(str(skin_type))
+        skin_type_line = (
+            "            <strong>Skin Type:</strong> "
+            f"{escaped_skin_type}<br/>\n"
+        )
 
     return (
         '    <li class="cards__item">\n'
@@ -37,6 +45,7 @@ def serialize_animal(animal: dict[str, Any]) -> str:
         f'            <strong>Diet:</strong> {diet}<br/>\n'
         f'            <strong>Location:</strong> {escape(locations)}<br/>\n'
         f'{type_line}'
+        f'{skin_type_line}'
         '        </p>\n'
         '    </li>'
     )

@@ -27,7 +27,11 @@ class ZootopiaGeneratorTests(unittest.TestCase):
         """One data record becomes the guide's required HTML card structure."""
         animal = {
             "name": "Wire Fox Terrier",
-            "characteristics": {"diet": "Carnivore", "type": "mammal"},
+            "characteristics": {
+                "diet": "Carnivore",
+                "type": "mammal",
+                "skin_type": "Fur",
+            },
             "locations": ["North-America", "Canada"],
             "taxonomy": {"class": "Reptilia"},
         }
@@ -39,6 +43,7 @@ class ZootopiaGeneratorTests(unittest.TestCase):
             "<strong>Location:</strong> North-America and Canada<br/>", card
         )
         self.assertIn("<strong>Type:</strong> mammal<br/>", card)
+        self.assertIn("<strong>Skin Type:</strong> Fur<br/>", card)
         self.assertNotIn("Reptilia", card)
         self.assertTrue(card.rstrip().endswith("</li>"))
 

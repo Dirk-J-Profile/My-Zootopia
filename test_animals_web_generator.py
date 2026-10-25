@@ -6,7 +6,13 @@ from pathlib import Path
 from subprocess import run
 import sys
 
-from animals_web_generator import generate_html, load_data, serialize_animal
+from animals_web_generator import (
+    available_skin_types,
+    filter_by_skin_type,
+    generate_html,
+    load_data,
+    serialize_animal,
+)
 
 
 PROJECT_DIR = Path(__file__).parent
@@ -22,6 +28,36 @@ class ZootopiaGeneratorTests(unittest.TestCase):
         animals = load_data(DATA_FILE)
         self.assertEqual(19, len(animals))
         self.assertEqual("American Foxhound", animals[0]["name"])
+
+    def test_available_skin_types_are_unique_and_sorted(self):
+        """Available skin types come from the JSON data without duplicates."""
+        animals = [
+            {"characteristics": {"skin_type": "Hair"}},
+            {"characteristics": {"skin_type": "Fur"}},
+            {"characteristics": {"skin_type": "Hair"}},
+        ]
+
+        self.assertEqual(["Fur", "Hair"], available_skin_types(animals))
+
+    def test_filter_by_skin_type_matches_without_case_sensitivity(self):
+        """A selected skin type retains only matching animal records."""
+        animals = [
+            {"name": "Hair animal", "characteristics": {"skin_type": "Hair"}},
+            {"name": "Fur animal", "characteristics": {"skin_type": "Fur"}},
+        ]
+
+        filtered_animals = filter_by_skin_type(animals, "hair")
+
+        filtered_names = [animal["name"] for animal in filtered_animals]
+        self.assertEqual(["Hair animal"], filtered_names)
+
+    def test_filter_by_skin_type_returns_no_animals_for_unknown_value(self):
+        """An unsupported selection is handled as an empty result."""
+        animals = [
+            {"name": "Hair animal", "characteristics": {"skin_type": "Hair"}}
+        ]
+
+        self.assertEqual([], filter_by_skin_type(animals, "Scales"))
 
     def test_serialize_animal_builds_a_card_with_required_details(self):
         """One data record becomes the guide's required HTML card structure."""
@@ -65,6 +101,22 @@ class ZootopiaGeneratorTests(unittest.TestCase):
         self.assertIn("<li><strong>Location:</strong> Europe</li>", card)
         self.assertNotIn("<strong>Type:</strong>", card)
 
+    def test_serialize_animal_escapes_html_values(self):
+        """Animal values cannot inject markup into the generated card."""
+        animal = {
+            "name": "Fox <&>",
+            "characteristics": {"diet": "Fish & Chips"},
+            "locations": ["North <America>"],
+        }
+
+        card = serialize_animal(animal)
+
+        self.assertIn("Fox &lt;&amp;&gt;", card)
+        self.assertIn("Fish &amp; Chips", card)
+        self.assertIn("North &lt;America&gt;", card)
+        self.assertNotIn("<strong>Type:</strong>", card)
+        self.assertNotIn("<strong>Skin Type:</strong>", card)
+
     def test_generate_html_replaces_template_marker_with_all_cards(self):
         """The page has 19 cards and no unreplaced template marker."""
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -77,18 +129,24 @@ class ZootopiaGeneratorTests(unittest.TestCase):
         self.assertIn("My Animal Repository", generated_html)
         self.assertIn("Wire Fox Terrier", generated_html)
 
-    def test_pycharm_entry_point_runs_the_generator(self):
-        """Running main.py creates the page and reports all 19 cards."""
+    def test_pycharm_entry_point_runs_the_filtered_generator(self):
+        """Running main.py lists types and generates cards for Hair only."""
         result = run(
             [sys.executable, "main.py"],
             check=True,
             capture_output=True,
+            input="Hair\n",
             text=True,
             cwd=PROJECT_DIR,
         )
-        expected_message = "Generated animals.html with 19 animal cards."
+        expected_message = "Generated animals.html with 8 animal cards."
+        self.assertIn("Available skin types:", result.stdout)
         self.assertIn(expected_message, result.stdout)
-        self.assertTrue((PROJECT_DIR / "animals.html").is_file())
+        generated_html = (PROJECT_DIR / "animals.html").read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(8, generated_html.count('<li class="cards__item">'))
+        self.assertNotIn("Arctic Fox", generated_html)
 
 
 if __name__ == "__main__":

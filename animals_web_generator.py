@@ -19,6 +19,29 @@ def load_data(file_path: Path | str) -> list[dict[str, Any]]:
         return json.load(handle)
 
 
+def available_skin_types(animals: list[dict[str, Any]]) -> list[str]:
+    """Return the distinct skin types supplied by the animal records."""
+    skin_types = {
+        str(animal["characteristics"]["skin_type"])
+        for animal in animals
+        if animal["characteristics"].get("skin_type")
+    }
+    return sorted(skin_types)
+
+
+def filter_by_skin_type(
+    animals: list[dict[str, Any]], selected_skin_type: str
+) -> list[dict[str, Any]]:
+    """Return animals matching the selection without case sensitivity."""
+    normalized_skin_type = selected_skin_type.strip().casefold()
+    return [
+        animal
+        for animal in animals
+        if str(animal["characteristics"].get("skin_type", "")).casefold()
+        == normalized_skin_type
+    ]
+
+
 def serialize_animal(animal: dict[str, Any]) -> str:
     """Convert one animal record into the guide's required card markup."""
     name = escape(str(animal["name"]))
@@ -61,9 +84,11 @@ def generate_html(
     data_file: Path | str = DATA_FILE,
     template_file: Path | str = TEMPLATE_FILE,
     output_file: Path | str = OUTPUT_FILE,
+    animals: list[dict[str, Any]] | None = None,
 ) -> Path:
     """Fill the supplied HTML template with an HTML card for every animal."""
-    animals = load_data(data_file)
+    if animals is None:
+        animals = load_data(data_file)
     template = Path(template_file).read_text(encoding="utf-8")
     animal_cards = "\n".join(serialize_animal(animal) for animal in animals)
 
@@ -78,9 +103,18 @@ def generate_html(
 
 
 def main() -> None:
-    """Generate animals.html and report its path."""
-    output_path = generate_html()
-    animal_count = len(load_data(DATA_FILE))
+    """Generate a page for the skin type chosen by the user."""
+    animals = load_data(DATA_FILE)
+    skin_types = available_skin_types(animals)
+    print(f"Available skin types: {', '.join(skin_types)}")
+    selected_skin_type = input("Select a skin type: ")
+    filtered_animals = filter_by_skin_type(animals, selected_skin_type)
+    if not filtered_animals:
+        print(f"No animals found with skin type: {selected_skin_type}")
+        return
+
+    output_path = generate_html(animals=filtered_animals)
+    animal_count = len(filtered_animals)
     print(f"Generated {output_path.name} with {animal_count} animal cards.")
 
 
